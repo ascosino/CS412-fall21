@@ -1,0 +1,11 @@
+extends layout
+
+block content
+    p #{response}
+
+    body
+        form(action='/ps4', method='POST')
+            p
+                | Enter how many facts you want:
+                input(type='text', name='Number of facts', value='')
+            input(type='submit', value='Submit')
