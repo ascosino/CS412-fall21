@@ -18,7 +18,30 @@ client.flushdb((err, success) => {
     }
 });
 
-router.post('/', function (req, res, next) {
+router.post('/ps4/:inputValue', async (req, res, next) => {
+    let numFacts = req.params.inputValue;
+    if (await existsAsync(numFacts)) {
+        let numFactsData = await getAsync(numFacts);
+        let response = {
+            numFactsData: numFactsData,
+            cached: true
+        }
+        res.send(response);
+
+    } else {
+        let returnValueRaw = await fetch('https://api.api-ninjas.com/v1/facts?limit=' + req.params.inputValue);
+        let numFactsData = await returnValueRaw.json();
+        await setAsync(numFacts, JSON.stringify(numFactsData));
+        let response = {
+            numFactsData: numFactsData,
+            cached: false
+        }
+        await expireAsync(numFacts, 5);
+        res.send(response)
+    }
+});
+
+router.post('/ps4', function (req, res, next) {
     const numFacts = req.params.inputValue;
     client.exists(numFacts, (err, match) => {
         if (err) {
@@ -56,7 +79,7 @@ factsAsync()
         )
     .then(() => console.log('All done!'))
 
-router.route('/')
+router.route('/ps4')
     .get(function (req, res, next) {
         console.log('Starting waterfall')
         async.waterfall(getRandomFact(),
